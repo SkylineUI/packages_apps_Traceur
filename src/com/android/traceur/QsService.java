@@ -21,9 +21,11 @@ import android.graphics.drawable.Icon;
 import android.preference.PreferenceManager;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
+import android.util.Log;
 
 public class QsService extends TileService {
 
+    private static final String TAG = "Traceur";
     private static QsService sListeningInstance;
 
     public static void updateTile() {
@@ -46,6 +48,12 @@ public class QsService extends TileService {
     }
 
     private void update() {
+        Receiver.updateDeveloperOptionsWatcher(this, /* fromBootIntent */ false);
+        if (getQsTile() == null) {
+            Log.w(TAG, "QsService.getQsTile() returned null");
+            return;
+        }
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean tracingOn = prefs.getBoolean(getString(R.string.pref_key_tracing_on), false);
         boolean stackSamplingOn = prefs.getBoolean(
@@ -60,7 +68,6 @@ public class QsService extends TileService {
                 (tracingOn ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE));
         getQsTile().setLabel(titleString);
         getQsTile().updateTile();
-        Receiver.updateDeveloperOptionsWatcher(this, /* fromBootIntent */ false);
     }
 
     /** When we click the tile, toggle tracing state.
